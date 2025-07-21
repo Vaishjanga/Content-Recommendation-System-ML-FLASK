@@ -53,10 +53,6 @@ flask run
 ### 7. Access the app
 - Open [http://localhost:5000](http://localhost:5000) in your browser.
 
-## Deployment (Heroku Example)
-- Make sure you have a `Procfile`, `requirements.txt`, and `runtime.txt`.
-- Follow the Heroku deployment steps in the main documentation or ask for a step-by-step guide.
-
 ## Requirements
 See `requirements.txt` for the full list. Key packages:
 - Flask, Flask-SQLAlchemy, Flask-Migrate, Flask-Login
