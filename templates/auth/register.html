@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Recommendation System{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 2rem auto;">
+    <div class="card">
+        <h2 style="text-align: center; margin-bottom: 2rem;">Create Your Account</h2>
+        
+        <p style="text-align: center; color: #7f8c8d; margin-bottom: 2rem;">
+            Register to get personalized book recommendations
+        </p>
+        
+        <!-- Simple HTML form that submits to the API -->
+        <form action="#" method="post" id="registerForm">
+            <div class="form-group">
+                <label for="username">Username *</label>
+                <input type="text" id="username" name="username" required 
+                       placeholder="Choose a unique username">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" required 
+                       placeholder="your.email@example.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password *</label>
+                <input type="password" id="password" name="password" required 
+                       minlength="6" placeholder="At least 6 characters">
+            </div>
+            
+            <div class="form-group">
+                <label for="age">Age</label>
+                <input type="number" id="age" name="age" min="13" max="100" 
+                       placeholder="Optional">
+            </div>
+            
+            <div class="form-group">
+                <label for="location">Location</label>
+                <select id="location" name="location">
+                    <option value="">Select your country (optional)</option>
+                    <option value="USA">United States</option>
+                    <option value="UK">United Kingdom</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Australia">Australia</option>
+                    <option value="Germany">Germany</option>
+                    <option value="France">France</option>
+                    <option value="India">India</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Favorite Book Genres (Check all that apply):</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                    <label style="font-weight: normal;"><input type="checkbox" name="genres" value="fiction"> Fiction</label>
+                    <label style="font-weight: normal;"><input type="checkbox" name="genres" value="mystery"> Mystery</label>
+                    <label style="font-weight: normal;"><input type="checkbox" name="genres" value="romance"> Romance</label>
+                    <label style="font-weight: normal;"><input type="checkbox" name="genres" value="sci-fi"> Science Fiction</label>
+                    <label style="font-weight: normal;"><input type="checkbox" name="genres" value="fantasy"> Fantasy</label>
+                    <label style="font-weight: normal;"><input type="checkbox" name="genres" value="biography"> Biography</label>
+                    <label style="font-weight: normal;"><input type="checkbox" name="genres" value="history"> History</label>
+                    <label style="font-weight: normal;"><input type="checkbox" name="genres" value="self-help"> Self-Help</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn" style="width: 100%;">
+                    Create My Account
+                </button>
+            </div>
+        </form>
+        
+        <div style="text-align: center; margin-top: 1rem;">
+            <p>Already have an account? <a href="/login">Login here</a></p>
+        </div>
+        
+        <div id="status-message"></div>
+    </div>
+</div>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const statusDiv = document.getElementById('status-message');
+    
+    // Show loading
+    submitBtn.innerHTML = 'Creating Account...';
+    submitBtn.disabled = true;
+    
+    // Collect form data
+    const genres = Array.from(form.querySelectorAll('input[name="genres"]:checked'))
+                       .map(cb => cb.value);
+    
+    const userData = {
+        username: formData.get('username'),
+        email: formData.get('email'),
+        password: formData.get('password'),
+        age: formData.get('age') ? parseInt(formData.get('age')) : null,
+        location: formData.get('location'),
+        preferences: {
+            favorite_genres: genres
+        }
+    };
+    
+    try {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.access_token) {
+            // Success
+            statusDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <strong>Success!</strong> Account created successfully! 
+                    <br>Welcome, ${result.user.username}!
+                    <br><a href="/login">Click here to login</a>
+                </div>
+            `;
+            form.reset();
+        } else {
+            // Error
+            statusDiv.innerHTML = `
+                <div class="alert alert-error">
+                    <strong>Error:</strong> ${result.error || 'Registration failed'}
+                </div>
+            `;
+        }
+    } catch (error) {
+        statusDiv.innerHTML = `
+            <div class="alert alert-error">
+                <strong>Error:</strong> Unable to connect to server. Please try again.
+            </div>
+        `;
+    }
+    
+    // Reset button
+    submitBtn.innerHTML = 'Create My Account';
+    submitBtn.disabled = false;
+});
+</script>
+{% endblock %}

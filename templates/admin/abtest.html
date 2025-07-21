@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}A/B Testing Platform - Recommendation System{% endblock %}
+
+{% block content %}
+<h2>A/B Testing Platform</h2>
+<div style="margin-bottom: 1rem;">
+    <a href="/admin" class="btn" style="background:#3498db;">Back to Admin Dashboard</a>
+</div>
+
+<div class="card">
+    <h3>A/B Tests</h3>
+    <form method="POST" action="{{ url_for('admin_create_abtest') }}" style="margin-bottom:1rem;">
+        <input name="name" placeholder="Test Name" required>
+        <input name="algorithm_a" placeholder="Algorithm A" required>
+        <input name="algorithm_b" placeholder="Algorithm B" required>
+        <input name="traffic_split" type="number" step="0.01" min="0" max="1" value="0.5" required>
+        <button type="submit" class="btn">Create A/B Test</button>
+    </form>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Test Name</th>
+                <th>Algorithm A</th>
+                <th>Algorithm B</th>
+                <th>Status</th>
+                <th>Traffic Split</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for abtest in abtests %}
+            <tr>
+                <td>{{ abtest.name }}</td>
+                <td>{{ abtest.algorithm_a }}</td>
+                <td>{{ abtest.algorithm_b }}</td>
+                <td>{{ 'Active' if abtest.is_active else 'Stopped' }}</td>
+                <td>{{ abtest.traffic_split }}</td>
+                <td>{{ abtest.created_at.strftime('%Y-%m-%d %H:%M') if abtest.created_at else '' }}</td>
+                <td>
+                    {% if abtest.is_active %}
+                    <form method="POST" action="{{ url_for('admin_stop_abtest', test_id=abtest.id) }}">
+                        <button type="submit" class="btn btn-danger">Stop</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+        {% else %}
+            <tr><td colspan="7" style="text-align:center; color:#7f8c8d;">No A/B tests found</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <h3>A/B Test Assignments</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Test Name</th>
+                <th>Variant</th>
+                <th>Assigned At</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for assignment in assignments %}
+            <tr>
+                <td>{{ assignment.user_id }}</td>
+                <td>{{ assignment.test_name }}</td>
+                <td>{{ assignment.variant }}</td>
+                <td>{{ assignment.assigned_at.strftime('%Y-%m-%d %H:%M') if assignment.assigned_at else '' }}</td>
+            </tr>
+        {% else %}
+            <tr><td colspan="4" style="text-align:center; color:#7f8c8d;">No assignments found</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 

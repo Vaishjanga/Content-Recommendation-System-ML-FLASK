@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Book Details - {{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 2rem auto;">
+    <h2>{{ book.title }}</h2>
+    <p><strong>Author:</strong> {{ book.author }}</p>
+    {% if book.genre %}<p><strong>Genre:</strong> {{ book.genre }}</p>{% endif %}
+    {% if book.mood %}<p><strong>Mood:</strong> {{ book.mood }}</p>{% endif %}
+    {% if book.publisher %}<p><strong>Publisher:</strong> {{ book.publisher }}</p>{% endif %}
+    {% if book.year %}<p><strong>Year:</strong> {{ book.year }}</p>{% endif %}
+    {% if book.popularity_score is not none %}<p><strong>Popularity Score:</strong> {{ book.popularity_score }}</p>{% endif %}
+    {% if book.quality_score is not none %}<p><strong>Quality Score:</strong> {{ book.quality_score }}</p>{% endif %}
+    <hr>
+    <h4>Ratings</h4>
+    {% if book.ratings_stats %}
+        <p>Average: {{ book.ratings_stats.avg_rating }} ({{ book.ratings_stats.rating_count }} ratings)</p>
+        <p>Min: {{ book.ratings_stats.min_rating }}, Max: {{ book.ratings_stats.max_rating }}</p>
+    {% else %}
+        <p>No ratings yet.</p>
+    {% endif %}
+    <hr>
+    <h4>Recent Reviews</h4>
+    {% if book.recent_reviews and book.recent_reviews|length > 0 %}
+        <ul>
+        {% for review in book.recent_reviews %}
+            <li><strong>{{ review.username }}</strong> ({{ review.rating }}): {{ review.review }}<br><small>{{ review.created_at }}</small></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No recent reviews.</p>
+    {% endif %}
+    <hr>
+    <h4>Rate this Book</h4>
+    {% if user and user.is_authenticated %}
+    <form method="post" action="{{ url_for('rate_book', book_id=book.id) }}">
+        <label for="rating">Your Rating:</label>
+        <select name="rating" id="rating" required>
+            {% for i in range(1, 11) %}
+            <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Submit Rating</button>
+    </form>
+    {% else %}
+    <div class="alert alert-info">Please <a href="{{ url_for('login_page') }}">log in</a> to rate this book.</div>
+    {% endif %}
+    <br>
+    <a href="{{ url_for('books_search_page') }}">&larr; Back to Search</a>
+</div>
+{% endblock %} 

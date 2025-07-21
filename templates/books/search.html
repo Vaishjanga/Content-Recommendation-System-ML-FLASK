@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Search Books - Recommendation System{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Find Your Next Great Read</h2>
+    <form action="{{ url_for('books_search_page') }}" method="get" style="margin: 2rem 0;">
+        <div style="display: flex; gap: 1rem;">
+            <input type="text" name="q" value="{{ query|default('') }}" placeholder="Search by title, author, or ask in your own words (e.g., Recommend me a dark mystery like Sherlock Holmes)" style="flex: 1; padding: 0.7rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;" required>
+            <button type="submit" class="btn">Search</button>
+        </div>
+    </form>
+    {% if query %}
+        {% if is_nl and parsed %}
+            <div style="background: #f4f8fb; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <strong>AI understood:</strong>
+                <ul style="margin: 0;">
+                    {% for k, v in parsed.items() %}
+                        <li><b>{{ k }}:</b> {{ v or 'None' }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        {% if results %}
+            <h3>Results for "{{ query }}":</h3>
+            <ul>
+                {% for book in results %}
+                    <li>
+                        <b>{{ book.title }}</b> by {{ book.author }}
+                        {% if book.genre %} ({{ book.genre }}){% endif %}
+                        {% if book.mood %} [{{ book.mood }}]{% endif %}
+                        {% if book.explanation %}<br><span style="color: #888; font-size: 0.95em;">{{ book.explanation }}</span>{% endif %}
+                        <br>
+                        <a href="{{ url_for('books_search_page', q=query, details=book.id) }}">View Details</a>
+                        {# Debug info: #}
+                        {% if details_book %}<!-- details_book.id={{ details_book.id }}, book.id={{ book.id }} -->{% endif %}
+                        {% if details_book and details_book.id|string == book.id|string %}
+                            <div style="background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+                                <h4>Book Details</h4>
+                                <p><strong>Title:</strong> {{ details_book.title or 'N/A' }}</p>
+                                <p><strong>Author:</strong> {{ details_book.author or 'N/A' }}</p>
+                                <p><strong>Genre:</strong> {{ details_book.genre or 'N/A' }}</p>
+                                <p><strong>Mood:</strong> {{ details_book.mood or 'N/A' }}</p>
+                                <p><strong>Publisher:</strong> {{ details_book.publisher or 'N/A' }}</p>
+                                <p><strong>Year:</strong> {{ details_book.year or 'N/A' }}</p>
+                                <p><strong>Popularity Score:</strong> {{ details_book.popularity_score if details_book.popularity_score is not none else 'N/A' }}</p>
+                                <p><strong>Quality Score:</strong> {{ details_book.quality_score if details_book.quality_score is not none else 'N/A' }}</p>
+                                <hr>
+                                <h5>Ratings</h5>
+                                {% if details_book.ratings_stats %}
+                                    <p>Average: {{ details_book.ratings_stats.avg_rating if details_book.ratings_stats.avg_rating is not none else 'N/A' }} ({{ details_book.ratings_stats.rating_count if details_book.ratings_stats.rating_count is not none else 'N/A' }} ratings)</p>
+                                    <p>Min: {{ details_book.ratings_stats.min_rating if details_book.ratings_stats.min_rating is not none else 'N/A' }}, Max: {{ details_book.ratings_stats.max_rating if details_book.ratings_stats.max_rating is not none else 'N/A' }}</p>
+                                {% else %}
+                                    <p>No ratings yet.</p>
+                                {% endif %}
+                                <hr>
+                                <h5>Recent Reviews</h5>
+                                {% if details_book.recent_reviews and details_book.recent_reviews|length > 0 %}
+                                    <ul>
+                                    {% for review in details_book.recent_reviews %}
+                                        <li><strong>{{ review.username }}</strong> ({{ review.rating }}): {{ review.review }}<br><small>{{ review.created_at }}</small></li>
+                                    {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p>No recent reviews.</p>
+                                {% endif %}
+                                <hr>
+                                <h5>Rate this Book</h5>
+                                {% if user.is_authenticated %}
+                                <form method="post" action="{{ url_for('rate_book', book_id=details_book.id) }}">
+                                    <label for="rating">Your Rating:</label>
+                                    <select name="rating" id="rating" required>
+                                        {% for i in range(1, 11) %}
+                                        <option value="{{ i }}">{{ i }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit">Submit Rating</button>
+                                </form>
+                                {% else %}
+                                <div class="alert alert-info">Please <a href="{{ url_for('login_page') }}">log in</a> to rate this book.</div>
+                                {% endif %}
+                                <br>
+                                <a href="{{ url_for('books_search_page', q=query) }}">Close Details</a>
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div style="color: #888;">No results found.</div>
+        {% endif %}
+    {% else %}
+        <div style="text-align: center; color: #7f8c8d; padding: 2rem;">
+            <h3>Try searching for:</h3>
+            <p>"Harry Potter" for fantasy books</p>
+            <p>"Agatha Christie" for mystery novels</p>
+            <p>"Stephen King" for horror stories</p>
+            <p>"Recommend me a dark mystery like Sherlock Holmes"</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
